@@ -1,6 +1,9 @@
 package saml
 
-import "github.com/RobotsAndPencils/go-saml/util"
+import (
+	"github.com/mikemacd/go-saml/util"
+	"errors"
+)
 
 // ServiceProviderSettings provides settings to configure server acting as a SAML Service Provider.
 // Expect only one IDP per SP in this configuration. If you need to configure multipe IDPs for an SP
@@ -32,18 +35,18 @@ func (s *ServiceProviderSettings) Init() (err error) {
 	if s.SPSignRequest {
 		s.publicCert, err = util.LoadCertificate(s.PublicCertPath)
 		if err != nil {
-			panic(err)
+			return errors.New("Error reading public cert '"+s.PublicCertPath+"':"+err.Error())
 		}
 
 		s.privateKey, err = util.LoadCertificate(s.PrivateKeyPath)
 		if err != nil {
-			panic(err)
+			return errors.New("Error reading private key '"+s.privateKey+"':"+err.Error())
 		}
 	}
 
 	s.iDPPublicCert, err = util.LoadCertificate(s.IDPPublicCertPath)
 	if err != nil {
-		panic(err)
+		return errors.New("Error reading IDP cert '"+s.IDPPublicCertPath+"':"+err.Error())
 	}
 
 	return nil
