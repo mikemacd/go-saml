@@ -22,6 +22,20 @@ type AuthnRequest struct {
 	originalString                 string
 }
 
+type LogoutRequest struct {
+	XMLName                        xml.Name
+	SAMLP                          string                `xml:"xmlns:samlp,attr"`
+	SAML                           string                `xml:"xmlns:saml,attr"`
+	SAMLSIG                        string                `xml:"xmlns:samlsig,attr,omitempty"`
+	ID                             string                `xml:"ID,attr"`
+	Version                        string                `xml:"Version,attr"`
+	Destination                    string                `xml:"Destination,attr"`
+	IssueInstant                   string                `xml:"IssueInstant,attr"`
+	Issuer                         Issuer                `xml:"Issuer"`
+	Signature                      *Signature            `xml:"Signature,omitempty"`
+	NameID                         NameID
+}
+
 type Issuer struct {
 	XMLName xml.Name
 	SAML    string `xml:"xmlns:saml,attr"`
@@ -208,6 +222,7 @@ type Assertion struct {
 	Conditions         Conditions
 	AuthnStatements    []AuthnStatement `xml:"AuthnStatement,omitempty"`
 	AttributeStatement AttributeStatement
+	Signature          Signature `xml:",omitempty"`
 }
 
 type Conditions struct {
