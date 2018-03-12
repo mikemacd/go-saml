@@ -20,7 +20,7 @@ type AuthnRequest struct {
 	RequestedAuthnContext          RequestedAuthnContext `xml:"RequestedAuthnContext"`
 	Signature                      *Signature            `xml:"Signature,omitempty"`
 	originalString                 string
-	ForceAuthn                     bool                  `xml:"ForceAuthn,omitempty"`
+	ForceAuthn                     bool                  `xml:"ForceAuthn,attr,omitempty"`
 }
 
 type LogoutRequest struct {
