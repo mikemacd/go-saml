@@ -107,8 +107,6 @@ func NewLogoutRequest() *LogoutRequest {
 	}
 }
 
-
-
 func ParseCompressedEncodedLogoutRequest(b64RequestXML string) (*LogoutRequest, error) {
 	var logoutRequest LogoutRequest
 	compressedXML, err := base64.StdEncoding.DecodeString(b64RequestXML)
