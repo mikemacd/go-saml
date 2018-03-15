@@ -19,6 +19,45 @@ const (
 func SignRequest(xml string, privateKeyPath string) (string, error) {
 	return sign(xml, privateKeyPath, xmlRequestID)
 }
+// SignLogoutRequest returns the signature to a SAML 2.0 LogoutRequest
+// `privateKeyPath` must be a path on the filesystem, openssl is run out of process
+// through `exec`
+func SignLogoutRequest(xml string, privateKeyPath string) (string, error) {
+
+	samlXmlsecInput, err := ioutil.TempFile(os.TempDir(), "tmpgs")
+	if err != nil {
+		return "", err
+	}
+	defer deleteTempFile(samlXmlsecInput.Name())
+	samlXmlsecInput.WriteString("<?xml version='1.0' encoding='UTF-8'?>\n")
+	samlXmlsecInput.WriteString(xml)
+	samlXmlsecInput.Close()
+
+	samlXmlsecOutput, err := ioutil.TempFile(os.TempDir(), "tmpgs")
+	if err != nil {
+		return "", err
+	}
+	defer deleteTempFile(samlXmlsecOutput.Name())
+	samlXmlsecOutput.Close()
+
+
+	output, err := exec.Command(
+		"openssl",
+		"dgst",
+		"-sha1",
+		"-sign", privateKeyPath,
+		"-out", samlXmlsecOutput.Name(), samlXmlsecInput.Name()).CombinedOutput()
+	if err != nil {
+		return "", errors.New(err.Error() + " : " + string(output))
+	}
+
+	signature, err := ioutil.ReadFile(samlXmlsecOutput.Name())
+	if err != nil {
+		return "", err
+	}
+
+	return string(signature), nil
+}
 
 // SignResponse sign a SAML 2.0 Response
 // `privateKeyPath` must be a path on the filesystem, xmlsec1 is run out of process
