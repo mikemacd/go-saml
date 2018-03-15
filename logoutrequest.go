@@ -1,11 +1,10 @@
 package saml
 
 import (
-	"encoding/xml"
-	"time"
 	"encoding/base64"
+	"encoding/xml"
 	"github.com/mikemacd/go-saml/util"
-
+	"time"
 )
 
 func NewLogoutRequest() *LogoutRequest {
@@ -14,11 +13,11 @@ func NewLogoutRequest() *LogoutRequest {
 		XMLName: xml.Name{
 			Local: "samlp:LogoutRequest",
 		},
-		SAMLP:                       "urn:oasis:names:tc:SAML:2.0:protocol",
-		SAML:                        "urn:oasis:names:tc:SAML:2.0:assertion",
-		SAMLSIG:                     "http://www.w3.org/2000/09/xmldsig#",
-		ID:                          id,
-		Version:                     "2.0",
+		SAMLP:        "urn:oasis:names:tc:SAML:2.0:protocol",
+		SAML:         "urn:oasis:names:tc:SAML:2.0:assertion",
+		SAMLSIG:      "http://www.w3.org/2000/09/xmldsig#",
+		ID:           id,
+		Version:      "2.0",
 		IssueInstant: time.Now().UTC().Format(time.RFC3339Nano),
 		Issuer: Issuer{
 			XMLName: xml.Name{
@@ -103,18 +102,59 @@ func NewLogoutRequest() *LogoutRequest {
 			XMLName: xml.Name{
 				Local: "saml:NameID",
 			},
-			Format:      "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+			Format: "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
 		},
 	}
 }
 
+
+
+func ParseCompressedEncodedLogoutRequest(b64RequestXML string) (*LogoutRequest, error) {
+	var logoutRequest LogoutRequest
+	compressedXML, err := base64.StdEncoding.DecodeString(b64RequestXML)
+	if err != nil {
+		return nil, err
+	}
+	bXML := util.Decompress(compressedXML)
+
+	err = xml.Unmarshal(bXML, &logoutRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	// There is a bug with XML namespaces in Go that's causing XML attributes with colons to not be roundtrip
+	// marshal and unmarshaled so we'll keep the original string around for validation.
+	logoutRequest.originalString = string(bXML)
+
+	return &logoutRequest, nil
+
+}
+
+func ParseEncodedLogoutRequest(b64RequestXML string) (*LogoutRequest, error) {
+	logoutRequest := LogoutRequest{}
+	bytesXML, err := base64.StdEncoding.DecodeString(b64RequestXML)
+	if err != nil {
+		return nil, err
+	}
+	err = xml.Unmarshal(bytesXML, &logoutRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	// There is a bug with XML namespaces in Go that's causing XML attributes with colons to not be roundtrip
+	// marshal and unmarshaled so we'll keep the original string around for validation.
+	logoutRequest.originalString = string(bytesXML)
+
+	return &logoutRequest, nil
+}
+
 // GetLogoutRequest returns a singed XML document that represents a LogoutRequest SAML document
-func (s *ServiceProviderSettings) GetLogoutRequest(nameId string) *LogoutRequest {
+func (s *ServiceProviderSettings) GetLogoutRequest(nameID string) *LogoutRequest {
 	r := NewLogoutRequest()
 	r.Destination = s.IDPLogoutURL
-	r.Issuer.Url = "CATechEntityId"
+	r.Issuer.Url = s.AssertionConsumerServiceURL
 	r.Signature.KeyInfo.X509Data.X509Certificate.Cert = s.PublicCert()
-	r.NameID.Value = nameId
+	r.NameID.Value = nameID
 
 	if !s.SPSignRequest {
 		r.SAMLSIG = ""
@@ -123,7 +163,6 @@ func (s *ServiceProviderSettings) GetLogoutRequest(nameId string) *LogoutRequest
 
 	return r
 }
-
 
 func (r *LogoutRequest) String() (string, error) {
 	b, err := xml.MarshalIndent(r, "", "    ")
@@ -134,30 +173,30 @@ func (r *LogoutRequest) String() (string, error) {
 	return string(b), nil
 }
 
-func (r *LogoutRequest) SignedString(privateKeyPath string) (string, error) {
+func (r *LogoutRequest) SignatureString(privateKeyPath string) (string, error) {
 	s, err := r.String()
 	if err != nil {
 		return "", err
 	}
 
-	return SignRequest(s, privateKeyPath)
+	return SignLogoutRequest(s, privateKeyPath)
 }
 
-func (r *LogoutRequest) EncodedSignedString(privateKeyPath string) (string, error) {
-	signed, err := r.SignedString(privateKeyPath)
+func (r *LogoutRequest) EncodedSignature(privateKeyPath string) (string, error) {
+	signature, err := r.SignatureString(privateKeyPath)
 	if err != nil {
 		return "", err
 	}
-	b64XML := base64.StdEncoding.EncodeToString([]byte(signed))
+	b64XML := base64.StdEncoding.EncodeToString([]byte(signature))
 	return b64XML, nil
 }
 
-func (r *LogoutRequest) CompressedEncodedSignedString(privateKeyPath string) (string, error) {
-	signed, err := r.SignedString(privateKeyPath)
+func (r *LogoutRequest) CompressedEncodedSignature(privateKeyPath string) (string, error) {
+	signature, err := r.SignatureString(privateKeyPath)
 	if err != nil {
 		return "", err
 	}
-	compressed := util.Compress([]byte(signed))
+	compressed := util.Compress([]byte(signature))
 	b64XML := base64.StdEncoding.EncodeToString(compressed)
 	return b64XML, nil
 }
