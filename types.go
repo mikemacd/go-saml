@@ -36,7 +36,7 @@ type LogoutRequest struct {
 	Signature                      *Signature            `xml:"Signature,omitempty"`
 	NameID                         NameID
 	SessionIndex                   string                `xml:",omitempty"`
-
+	originalString                 string
 }
 
 type Issuer struct {
