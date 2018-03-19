@@ -3,7 +3,7 @@ package saml
 import (
 	"encoding/base64"
 	"encoding/xml"
-	"github.com/mikemacd/go-saml/util"
+	"github.com/RobotsAndPencils/go-saml/util"
 	"time"
 )
 
