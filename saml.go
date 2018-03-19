@@ -1,7 +1,7 @@
 package saml
 
 import (
-	"github.com/mikemacd/go-saml/util"
+	"github.com/RobotsAndPencils/go-saml/util"
 	"errors"
 )
 
