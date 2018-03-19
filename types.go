@@ -35,7 +35,7 @@ type LogoutRequest struct {
 	Issuer                         Issuer                `xml:"Issuer"`
 	Signature                      *Signature            `xml:"Signature,omitempty"`
 	NameID                         NameID
-	SessionIndex                   string                `xml:"xmlns:samlp,SessionIndex,omitempty"`
+	SessionIndex                   string                `xml:"samlp:SessionIndex,omitempty"`
 	originalString                 string
 }
 
