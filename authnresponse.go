@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mikemacd/go-saml/util"
+	"github.com/RobotsAndPencils/go-saml/util"
 )
 
 func ParseCompressedEncodedResponse(b64ResponseXML string) (*Response, error) {
