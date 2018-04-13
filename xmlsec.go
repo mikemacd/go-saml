@@ -1,7 +1,6 @@
 package saml
 
 import (
-	"fmt"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -132,13 +131,11 @@ func verify(xml string, publicCertPath string, id string) error {
 		responses, err := exec.Command("bash", "-c", "grep -oiE '<([^: ]*:)?Response [^>]*>' "+samlXmlsecInput.Name()+" |/usr/bin/wc -l").CombinedOutput()
 
 		if err != nil {
-			errStr := err.Error()
-			fmt.Println("greperr: "+errStr)
-			_ = errStr
 			return err
 		}
-		if string(responses) != "1" {
-			return errors.New("error validating response: incorrect number of responses")
+		// Ascii one
+		if responses[0] != 49 {
+			return errors.New("error validating response: incorrect number of responses in request")
 		}
 	}
 
