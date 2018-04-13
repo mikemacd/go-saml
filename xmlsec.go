@@ -1,6 +1,7 @@
 package saml
 
 import (
+	"fmt"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -131,6 +132,7 @@ func verify(xml string, publicCertPath string, id string) error {
 		responses,err := exec.Command("grep"," -oiE '<([^: ]*:)?Response [^>]*>' "+samlXmlsecInput.Name()+" |wc -l").CombinedOutput()
 		if err != nil {
 			errStr := err.Error()
+			fmt.Println("greperr: "+errStr)
 			_ = errStr
 			return err
 		}
