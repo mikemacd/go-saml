@@ -1,6 +1,7 @@
 package saml
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -19,6 +20,7 @@ const (
 func SignRequest(xml string, privateKeyPath string) (string, error) {
 	return sign(xml, privateKeyPath, xmlRequestID)
 }
+
 // SignLogoutRequest returns the signature to a SAML 2.0 LogoutRequest
 // `privateKeyPath` must be a path on the filesystem, openssl is run out of process
 // through `exec`
@@ -39,7 +41,6 @@ func SignLogoutRequest(xml string, privateKeyPath string) (string, error) {
 	}
 	defer deleteTempFile(samlXmlsecOutput.Name())
 	samlXmlsecOutput.Close()
-
 
 	output, err := exec.Command(
 		"openssl",
@@ -127,10 +128,23 @@ func verify(xml string, publicCertPath string, id string) error {
 	samlXmlsecInput.Close()
 	defer deleteTempFile(samlXmlsecInput.Name())
 
+	if id == xmlResponseID {
+		// This performs a very basic defence agains XML Signature wrapping attacks.
+		// There should be exactly one occurrence of the "Response" tag in a SAML response payload
+		responses, err := exec.Command("sh", "-c", "grep -oiE '<([^: ]*:)?Response [^>]*>' "+samlXmlsecInput.Name()+" | wc -l").CombinedOutput()
+
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(responses, []byte{'1', 10}) {
+			return errors.New("error validating response: incorrect number of responses in request")
+		}
+	}
+
 	//fmt.Println("xmlsec1", "--verify", "--pubkey-cert-pem", publicCertPath, "--id-attr:ID", id, samlXmlsecInput.Name())
 	_, err = exec.Command("xmlsec1", "--verify", "--pubkey-cert-pem", publicCertPath, "--id-attr:ID", id, samlXmlsecInput.Name()).CombinedOutput()
 	if err != nil {
-		return errors.New("error verifing signature: " + err.Error())
+		return errors.New("error verifying signature: " + err.Error())
 	}
 	return nil
 }
