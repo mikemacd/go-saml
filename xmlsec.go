@@ -128,6 +128,7 @@ func verify(xml string, publicCertPath string, id string) error {
 	defer deleteTempFile(samlXmlsecInput.Name())
 
 	if id == xmlResponseID {
+		// This performs a very basic defence agains XML Signature wrapping attacks. There should be exactly one "Response" tag in a SAML response payload
 		responses, err := exec.Command("bash", "-c", "grep -oiE '<([^: ]*:)?Response [^>]*>' "+samlXmlsecInput.Name()+" |/usr/bin/wc -l").CombinedOutput()
 
 		if err != nil {
