@@ -128,8 +128,10 @@ func verify(xml string, publicCertPath string, id string) error {
 	defer deleteTempFile(samlXmlsecInput.Name())
 
 	if id == xmlResponseID {
-		responses,err := exec.Command("grep"," -oiE '<([^: ]*:)?Response [^>]*>' "+samlXmlsecInput.Name()+" |wc -l").Output()
+		responses,err := exec.Command("grep"," -oiE '<([^: ]*:)?Response [^>]*>' "+samlXmlsecInput.Name()+" |wc -l").CombinedOutput()
 		if err != nil {
+			errStr := err.Error()
+			_ = errStr
 			return err
 		}
 		if string(responses) != "1" {
