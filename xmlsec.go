@@ -127,6 +127,16 @@ func verify(xml string, publicCertPath string, id string) error {
 	samlXmlsecInput.Close()
 	defer deleteTempFile(samlXmlsecInput.Name())
 
+	if id == xmlResponseID {
+		responses,err := exec.Command("grep"," -oiE '<([^: ]*:)?Response [^>]*>' "+samlXmlsecInput.Name()+" |wc -l").Output()
+		if err != nil {
+			return err
+		}
+		if string(responses) != "1" {
+			return errors.New("error validating response: incorrect number of responses")
+		}
+	}
+
 	//fmt.Println("xmlsec1", "--verify", "--pubkey-cert-pem", publicCertPath, "--id-attr:ID", id, samlXmlsecInput.Name())
 	_, err = exec.Command("xmlsec1", "--verify", "--pubkey-cert-pem", publicCertPath, "--id-attr:ID", id, samlXmlsecInput.Name()).CombinedOutput()
 	if err != nil {
