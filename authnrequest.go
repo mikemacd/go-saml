@@ -144,7 +144,7 @@ func NewAuthnRequest() *AuthnRequest {
 			},
 			SAMLP:      "urn:oasis:names:tc:SAML:2.0:protocol",
 			Comparison: "exact",
-			AuthnContextClassRef: []AuthnContextClassRef{
+			AuthnContextClassRef: []AuthnContextClassRef{AuthnContextClassRef{
 				XMLName: xml.Name{
 					Local: "saml:AuthnContextClassRef",
 				},
