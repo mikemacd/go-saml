@@ -144,13 +144,15 @@ func NewAuthnRequest() *AuthnRequest {
 			},
 			SAMLP:      "urn:oasis:names:tc:SAML:2.0:protocol",
 			Comparison: "exact",
-			AuthnContextClassRef: []AuthnContextClassRef{AuthnContextClassRef{
-				XMLName: xml.Name{
-					Local: "saml:AuthnContextClassRef",
+			AuthnContextClassRef: []AuthnContextClassRef{
+				AuthnContextClassRef{
+					XMLName: xml.Name{
+						Local: "saml:AuthnContextClassRef",
+					},
+					SAML:      "urn:oasis:names:tc:SAML:2.0:assertion",
+					Transport: "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
 				},
-				SAML:      "urn:oasis:names:tc:SAML:2.0:assertion",
-				Transport: "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
-			},
+		    	},
 		},
 		Signature: &Signature{
 			XMLName: xml.Name{
