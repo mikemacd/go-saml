@@ -55,7 +55,7 @@ type RequestedAuthnContext struct {
 	XMLName              xml.Name
 	SAMLP                string               `xml:"xmlns:samlp,attr"`
 	Comparison           string               `xml:"Comparison,attr"`
-	AuthnContextClassRef AuthnContextClassRef `xml:"AuthnContextClassRef"`
+	AuthnContextClassRef []AuthnContextClassRef `xml:"AuthnContextClassRef"`
 }
 
 type AuthnContextClassRef struct {
