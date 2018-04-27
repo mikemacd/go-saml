@@ -136,11 +136,10 @@ func verify(xml string, publicCertPath string, id string) error {
 	samlXmlsecInput.Close()
 	defer deleteTempFile(samlXmlsecInput.Name())
 
-	if id == xmlResponseID {
-		// This performs a very basic defence agains XML Signature wrapping attacks.
-		// There should be exactly one occurrence of the "Response" tag in a SAML response payload
-		responses, err := exec.Command("sh", "-c", "grep -oiE '<([^: ]*:)?Response [^>]*>' "+samlXmlsecInput.Name()+" | wc -l").CombinedOutput()
-
+	// This performs a very basic defence agains XML Signature wrapping attacks.
+	// There should be exactly one occurrence of the "Response" / "Assertion" tag in a SAML response payload
+	for _, token := range []string{"Response","Assertion",} {
+		responses, err := exec.Command("sh", "-c", "grep -oiE '<([^: ]*:)?"+token+" [^>]*>' "+samlXmlsecInput.Name()+" | wc -l").CombinedOutput()
 		if err != nil {
 			return err
 		}
