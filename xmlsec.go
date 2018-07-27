@@ -3,6 +3,7 @@ package saml
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -139,12 +140,12 @@ func verify(xml string, publicCertPath string, id string) error {
 	// This performs a very basic defence agains XML Signature wrapping attacks.
 	// There should be exactly one occurrence of the "Response" / "Assertion" tag in a SAML response payload
 	for _, token := range []string{"Response","Assertion",} {
-		responses, err := exec.Command("sh", "-c", "grep -oiE '<([^: ]*:)?"+token+" [^>]*>' "+samlXmlsecInput.Name()+" | wc -l").CombinedOutput()
+		responses, err := exec.Command("sh", "-c", "grep -oiE '<([^: ]*:)?"+token+" [^>]*>' "+samlXmlsecInput.Name()+" | wc -l | awk '{print $1}'").CombinedOutput()
 		if err != nil {
 			return err
 		}
 		if !bytes.Equal(responses, []byte{'1', 10}) {
-			return errors.New("error validating response: incorrect number of responses in request")
+			return fmt.Errorf("error validating response: incorrect number of '%s' in request: got '%v'",token,responses)
 		}
 	}
 
