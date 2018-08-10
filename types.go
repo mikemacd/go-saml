@@ -159,8 +159,8 @@ type Extensions struct {
 type SPSSODescriptor struct {
 	XMLName                    xml.Name
 	ProtocolSupportEnumeration string `xml:"protocolSupportEnumeration,attr"`
-	SigningKeyDescriptor       KeyDescriptor
-	EncryptionKeyDescriptor    KeyDescriptor
+	SigningKeyDescriptor       *KeyDescriptor `xml:"SigningKeyDescriptor,omitempty"`
+	EncryptionKeyDescriptor    *KeyDescriptor `xml:"EncryptionKeyDescriptor,omitempty"`
 	// SingleLogoutService        SingleLogoutService `xml:"SingleLogoutService"`
 	AssertionConsumerServices []AssertionConsumerService
 }

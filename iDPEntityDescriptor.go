@@ -6,7 +6,7 @@ import (
 )
 
 func (s *ServiceProviderSettings) EntityDescriptor() (EntityDescriptor) {
-	return EntityDescriptor{
+	entityDescriptor := EntityDescriptor{
 		XMLName: xml.Name{
 			Local: "md:EntityDescriptor",
 		},
@@ -98,10 +98,15 @@ func (s *ServiceProviderSettings) EntityDescriptor() (EntityDescriptor) {
 			},
 		},
 	}
+	if !s.SPSignRequest {
+		entityDescriptor.SPSSODescriptor.SigningKeyDescriptor = nil
+		entityDescriptor.SPSSODescriptor.EncryptionKeyDescriptor = nil
+	}
+	return entityDescriptor
 }
 
 func (s *ServiceProviderSettings) GetEntityDescriptor() (string, error) {
-	d := EntityDescriptor()
+	d := s.EntityDescriptor()
 	b, err := xml.MarshalIndent(d, "", "    ")
 	if err != nil {
 		return "", err
