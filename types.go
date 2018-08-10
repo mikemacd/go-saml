@@ -51,6 +51,11 @@ type NameIDPolicy struct {
 	Format      string `xml:"Format,attr"`
 }
 
+type NameIDFormat struct {
+	XMLName     xml.Name
+	Format      string `xml:",innerxml"`
+}
+
 type RequestedAuthnContext struct {
 	XMLName              xml.Name
 	SAMLP                string               `xml:"xmlns:samlp,attr"`
@@ -143,7 +148,7 @@ type EntityDescriptor struct {
 	MD       string `xml:"xmlns:md,attr"`
 	EntityId string `xml:"entityID,attr"`
 
-	Extensions      Extensions      `xml:"Extensions"`
+	Extensions      *Extensions      `xml:"Extensions,omitempty"`
 	SPSSODescriptor SPSSODescriptor `xml:"SPSSODescriptor"`
 }
 
@@ -158,11 +163,14 @@ type Extensions struct {
 
 type SPSSODescriptor struct {
 	XMLName                    xml.Name
+	AuthnRequestsSigned        bool `xml:"AuthnRequestsSigned,attr"`
+	WantAssertionsSigned       bool `xml:"WantAssertionsSigned,attr"`
+	NameIDFormat               NameIDFormat
 	ProtocolSupportEnumeration string `xml:"protocolSupportEnumeration,attr"`
 	SigningKeyDescriptor       *KeyDescriptor `xml:"SigningKeyDescriptor,omitempty"`
 	EncryptionKeyDescriptor    *KeyDescriptor `xml:"EncryptionKeyDescriptor,omitempty"`
 	// SingleLogoutService        SingleLogoutService `xml:"SingleLogoutService"`
-	AssertionConsumerServices []AssertionConsumerService
+	AssertionConsumerServices  []AssertionConsumerService
 }
 
 type EntityAttributes struct {

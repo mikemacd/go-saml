@@ -15,7 +15,7 @@ func (s *ServiceProviderSettings) EntityDescriptor() (EntityDescriptor) {
 		MD:       "urn:oasis:names:tc:SAML:2.0:metadata",
 		EntityId: s.AssertionConsumerServiceURL,
 
-		Extensions: Extensions{
+		Extensions: &Extensions{
 			XMLName: xml.Name{
 				Local: "md:Extensions",
 			},
@@ -23,13 +23,21 @@ func (s *ServiceProviderSettings) EntityDescriptor() (EntityDescriptor) {
 			MDAttr: "urn:oasis:names:tc:SAML:metadata:attribute",
 			MDRPI:  "urn:oasis:names:tc:SAML:metadata:rpi",
 		},
+
 		SPSSODescriptor: SPSSODescriptor{
 			ProtocolSupportEnumeration: "urn:oasis:names:tc:SAML:2.0:protocol",
-			SigningKeyDescriptor: KeyDescriptor{
+			AuthnRequestsSigned: false,
+			WantAssertionsSigned: true,
+			NameIDFormat: NameIDFormat{
+				XMLName: xml.Name{
+					Local: "md:NameIDFormat",
+				},
+				Format:  "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+			},
+			SigningKeyDescriptor: &KeyDescriptor{
 				XMLName: xml.Name{
 					Local: "md:KeyDescriptor",
 				},
-
 				Use: "signing",
 				KeyInfo: KeyInfo{
 					XMLName: xml.Name{
@@ -48,7 +56,7 @@ func (s *ServiceProviderSettings) EntityDescriptor() (EntityDescriptor) {
 					},
 				},
 			},
-			EncryptionKeyDescriptor: KeyDescriptor{
+			EncryptionKeyDescriptor: &KeyDescriptor{
 				XMLName: xml.Name{
 					Local: "md:KeyDescriptor",
 				},
