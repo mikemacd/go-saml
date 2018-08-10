@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-func (s *ServiceProviderSettings) GetEntityDescriptor() (string, error) {
-	d := EntityDescriptor{
+func (s *ServiceProviderSettings) EntityDescriptor() (EntityDescriptor) {
+	return EntityDescriptor{
 		XMLName: xml.Name{
 			Local: "md:EntityDescriptor",
 		},
@@ -72,11 +72,11 @@ func (s *ServiceProviderSettings) GetEntityDescriptor() (string, error) {
 				},
 			},
 			// SingleLogoutService{
-			// 	XMLName: xml.Name{
-			// 		Local: "md:SingleLogoutService",
-			// 	},
-			// 	Binding:  "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
-			// 	Location: "---TODO---",
+			//  XMLName: xml.Name{
+			//    Local: "md:SingleLogoutService",
+			//  },
+			//  Binding:  "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+			//  Location: "---TODO---",
 			// },
 			AssertionConsumerServices: []AssertionConsumerService{
 				{
@@ -98,6 +98,10 @@ func (s *ServiceProviderSettings) GetEntityDescriptor() (string, error) {
 			},
 		},
 	}
+}
+
+func (s *ServiceProviderSettings) GetEntityDescriptor() (string, error) {
+	d := EntityDescriptor()
 	b, err := xml.MarshalIndent(d, "", "    ")
 	if err != nil {
 		return "", err
