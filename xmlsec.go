@@ -1,18 +1,22 @@
 package saml
 
 import (
-	"bytes"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
+
+	"github.com/beevik/etree"
+	dsig "github.com/russellhaering/goxmldsig"
 )
 
 const (
-	xmlResponseID = "urn:oasis:names:tc:SAML:2.0:protocol:Response"
-	xmlRequestID  = "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest"
+	xmlResponseID  = "urn:oasis:names:tc:SAML:2.0:protocol:Response"
+	xmlRequestID   = "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest"
 	xmlAssertionID = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
 )
 
@@ -126,34 +130,46 @@ func VerifyRequestSignature(xml string, publicCertPath string) error {
 	return verify(xml, publicCertPath, xmlRequestID)
 }
 
-func verify(xml string, publicCertPath string, id string) error {
-	//Write saml to
-	samlXmlsecInput, err := ioutil.TempFile(os.TempDir(), "tmpgs")
+func verify(xml string, publicCert string, id string) error {
+	certfile, err := ioutil.ReadFile(publicCert)
+	if err != nil {
+		return errors.New("Could not read cert from file " + publicCert)
+	}
+
+	certPEM, _ := pem.Decode([]byte(certfile))
+	if certPEM == nil {
+		return errors.New("Could not decode cert from PEM block")
+	}
+
+	cert, err := x509.ParseCertificate(certPEM.Bytes)
 	if err != nil {
 		return err
 	}
 
-	samlXmlsecInput.WriteString(xml)
-	samlXmlsecInput.Close()
-	defer deleteTempFile(samlXmlsecInput.Name())
+	ctx := dsig.NewDefaultValidationContext(&dsig.MemoryX509CertificateStore{
+		Roots: []*x509.Certificate{cert},
+	})
 
-	// This performs a very basic defence agains XML Signature wrapping attacks.
+	// create an etree document to store the xml in
+	doc := etree.NewDocument()
+	doc.ReadFromString(xml)
+
+	// This performs a very basic defense against XML Signature wrapping attacks.
 	// There should be exactly one occurrence of the "Response" / "Assertion" tag in a SAML response payload
-	for _, token := range []string{"Response","Assertion",} {
-		responses, err := exec.Command("sh", "-c", "grep -oiE '<([^: ]*:)?"+token+" [^>]*>' "+samlXmlsecInput.Name()+" | wc -l | awk '{print $1}'").CombinedOutput()
-		if err != nil {
-			return err
-		}
-		if !bytes.Equal(responses, []byte{'1', 10}) {
-			return fmt.Errorf("error validating response: incorrect number of '%s' in request: got '%v'",token,responses)
-		}
+	s := strings.Split(id, ":")
+	tag := s[len(s)-1]
+	re := regexp.MustCompile("<([^: /]*:)?" + tag + "[^>]*>")
+	matches := re.FindAll([]byte(xml), -1)
+	if len(matches) > 1 {
+		return errors.New("Too many " + tag + " elements found")
 	}
 
-	//fmt.Println("xmlsec1", "--verify", "--pubkey-cert-pem", publicCertPath, "--id-attr:ID", id, samlXmlsecInput.Name())
-	_, err = exec.Command("xmlsec1", "--verify", "--pubkey-cert-pem", publicCertPath, "--id-attr:ID", id, samlXmlsecInput.Name()).CombinedOutput()
+	// Do the actual signature validation.
+	_, err = ctx.Validate(doc.Root())
 	if err != nil {
-		return errors.New("error verifying signature: " + err.Error())
+		return err
 	}
+	// Success!
 	return nil
 }
 
